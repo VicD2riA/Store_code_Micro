@@ -1,0 +1,53 @@
+/*Base register address header file*/
+#include "stm32l1xx.h"
+/*Library related header files*/
+#include "stm32l1xx_ll_system.h"
+#include "stm32l1xx_ll_bus.h"
+#include "stm32l1xx_ll_gpio.h"
+#include "stm32l1xx_ll_pwr.h"
+#include "stm32l1xx_ll_rcc.h"
+#include "stm32l1xx_ll_utils.h"
+
+/*Timer peripherral driver included*/
+#include "stm32l1xx_ll_tim.h"
+
+/*Library LCD*/
+#include "stm32l1xx_ll_lcd.h"
+#include "stm32l152_glass_lcd.h"
+#include <stdio.h>
+
+void SystemClock_Config(void);
+void TIMBase_Config(void);
+void GPIO_Config(void);
+
+uint16_t cnt = 0;
+uint16_t cnt2 = 31;
+char disp_str[9];
+
+int main()
+{
+	SystemClock_Config();
+	TIMBase_Config();
+	GPIO_Config();
+	LCD_GLASS_Init(); //LCD init
+	LL_TIM_ClearFlag_UPDATE(TIM2);
+	
+	while(1)
+	{
+		cnt = LL_TIM_GetCounter(TIM2);
+		
+		if(cnt >= 1000-1 && cnt2 != 0)
+		{
+			LL_LCD_Clear();
+			sprintf(disp_str, "%d",cnt2);
+			LCD_GLASS_DisplayString((uint8_t*)disp_str);
+			LL_TIM_SetCounter(TIM2, 0);
+			cnt2 = cnt2-1;
+		}
+		if(cnt2 == 0)
+		{
+			LL_GPIO_SetOutputPin(GPIOB,LL_GPIO_PIN_7);
+			LL_GPIO_SetOutputPin(GPIOB,LL_GPIO_PIN_6);
+		}
+	}	
+}
